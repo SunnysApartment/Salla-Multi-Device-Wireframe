@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salla Multi-Device Wireframe & Bento Grid Simulator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cairo & Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        tajawal: ['Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        salla: {
+                            DEFAULT: '#00A382',
+                            light: '#e6f6f3',
+                            dark: '#007d64'
+                        }
+                    },
+                    boxShadow: {
+                        premium: '0 10px 30px -10px rgba(0, 163, 130, 0.15)',
+                        laptop: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Custom scrollbars */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* Soft pulse for grid alignment overlays */
+        @keyframes pulse-soft {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .guide-pulse {
+            animation: pulse-soft 2s infinite ease-in-out;
+        }
+
+        /* Wireframe Mode Background Grid Pattern */
+        .wireframe-grid-bg {
+            background-size: 20px 20px;
+            background-image: linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-slate-800 flex flex-col antialiased">
+
+    <!-- Premium Navigation Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-11 h-11 rounded-xl bg-salla flex items-center justify-center text-white shadow-md shadow-salla/20">
+                    <i class="fa-solid fa-layer-group text-xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl text-slate-900 tracking-tight">مُطوّر ومُحاكي شبكات Bento Grid
+                        لمتجر سلة</h1>
+                    <p class="text-xs text-slate-500 font-medium">أداة مرئية لتصميم البنرات المزدوجة (سطح المكتب
+                        والهاتف) بدقة متناهية</p>
+                </div>
+            </div>
+
+            <!-- Quick View Control Center -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Device Selector -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
+                    <button id="btn-device-desktop" onclick="setDeviceView('desktop')"
+                        class="px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 bg-white text-salla shadow-sm">
+                        <i class="fa-solid fa-desktop"></i>
+                        <span>عرض سطح المكتب</span>
+                    </button>
+                    <button id="btn-device-mobile" onclick="setDeviceView('mobile')"
+                        class="px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span>عرض الهاتف</span>
+                    </button>
+                </div>
+
+                <!-- Wireframe vs Live Mode -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
+                    <button id="btn-mode-wireframe" onclick="setVisualMode('wireframe')"
+                        class="px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 bg-white text-salla shadow-sm">
+                        <i class="fa-solid fa-drafting-compass"></i>
+                        <span>هيكل هندسي</span>
+                    </button>
+                    <button id="btn-mode-live" onclick="setVisualMode('live')"
+                        class="px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-eye"></i>
+                        <span>معاينة حية</span>
+                    </button>
+                </div>
+
+                <!-- Guides Toggle -->
+                <button id="btn-guides" onclick="toggleGuides()"
+                    class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+                    <i id="guides-icon" class="fa-solid fa-ruler-combined"></i>
+                    <span id="guides-text">إخفاء الأبعاد الإرشادية</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Main Dashboard -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+        <!-- RIGHT SIDE: THE DEVICE SIMULATOR SCREEN -->
+        <section
+            class="xl:col-span-7 flex flex-col items-center justify-center p-2 lg:p-4 bg-slate-100/60 rounded-3xl border border-slate-200/80 shadow-inner min-h-[700px] relative overflow-hidden">
+
+            <!-- Dynamic Device Frame Info -->
+            <div class="mb-4 text-center">
+                <span
+                    class="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-200 text-xs font-bold text-slate-700">
+                    <i class="fa-solid fa-circle-nodes text-salla animate-pulse"></i>
+                    <span id="device-status-lbl">جاري عرض: كمبيوتر مكتبي (عرض شبكي Bento Grid)</span>
+                </span>
+            </div>
+
+            <!-- DESKTOP SIMULATOR DEVICE FRAME -->
+            <div id="device-container-desktop" class="w-full max-w-5xl transition-all duration-500 transform scale-100">
+                <!-- Laptop Screen Header & Controls -->
+                <div
+                    class="bg-slate-900 text-slate-300 rounded-t-2xl px-4 py-3 flex justify-between items-center border-b border-slate-800 shadow-md">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        <span class="text-xs text-slate-400 font-mono ml-4 select-none">Salla Premium Bento Grid
+                            (Desktop)</span>
+                    </div>
+                    <div
+                        class="bg-slate-800 rounded-lg px-4 py-1.5 text-xs font-mono text-slate-300 w-96 text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                        https://salla.sa/luxurious-perfumes-store
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-arrow-left text-xs text-slate-500 cursor-pointer"></i>
+                        <i class="fa-solid fa-arrow-right text-xs text-slate-500 cursor-pointer"></i>
+                        <i class="fa-solid fa-rotate-right text-xs text-slate-400 cursor-pointer hover:text-white"></i>
+                    </div>
+                </div>
+
+                <!-- Laptop / Monitor Screen Body -->
+                <div
+                    class="bg-white p-6 border-b border-x border-slate-200 shadow-laptop min-h-[600px] max-h-[640px] overflow-y-auto custom-scroll relative wireframe-grid-bg">
+
+                    <!-- Salla Nav Brand Mock -->
+                    <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center select-none">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="w-9 h-9 bg-salla rounded-xl flex items-center justify-center text-white shadow-sm">
+                                <i class="fa-solid fa-crown text-sm"></i>
+                            </span>
+                            <span class="font-extrabold text-base text-slate-900 font-tajawal">نخبة العطور
+                                العالمية</span>
+                        </div>
+                        <div class="flex items-center gap-5 text-slate-600 text-sm font-semibold">
+                            <span class="hover:text-salla cursor-pointer">الرئيسية</span>
+                            <span class="hover:text-salla cursor-pointer">البنرات الاحترافية</span>
+                            <span class="hover:text-salla cursor-pointer">جديدنا</span>
+                            <span class="hover:text-salla cursor-pointer text-rose-500">خصومات حصرية %</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-slate-600">
+                            <i class="fa-solid fa-magnifying-glass cursor-pointer hover:text-salla"></i>
+                            <div class="relative cursor-pointer hover:text-salla">
+                                <i class="fa-solid fa-shopping-basket text-lg"></i>
+                                <span
+                                    class="absolute -top-1.5 -right-1.5 bg-salla text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">٣</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- THE BENTO GRID MAIN WRAPPER (1068.8px Total Dimensions) -->
+                    <!-- Sized perfectly to render 1068.8px width + gaps of 16px = ~1100px wrapper -->
+                    <div class="max-w-[1100px] mx-auto relative p-2">
+
+                        <!-- Core Bento Layout Columns -->
+                        <div class="grid grid-cols-12 gap-[16px] items-start" id="bento-desktop-grid">
+
+                            <!-- 1. LEFT COLUMN (مكياج - طولي): Width 263.2px, Height 516px (ColSpan 3) -->
+                            <div class="col-span-3 h-[516px] relative overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+                                onclick="focusOnEditor(5)">
+                                <img id="desk-img-5"
+                                    src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80"
+                                    alt="مكياج"
+                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    onerror="handleImageError(this, 'مكياج')">
+                                <!-- Specified Overlay standard gradient from UX design instructions -->
+                                <div id="desk-overlay-5"
+                                    class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                </div>
+
+                                <div class="absolute inset-0 p-6 flex flex-col justify-between items-start z-10">
+                                    <div class="w-full flex justify-between items-start">
+                                        <span id="desk-text-5"
+                                            class="text-white text-[18px] font-semibold bg-black/35 backdrop-blur-sm px-3.5 py-1 rounded-xl border border-white/10">مكياج</span>
+                                        <span
+                                            class="wireframe-only text-[10px] font-mono bg-amber-500 text-slate-950 px-2 py-0.5 rounded font-bold uppercase tracking-wider">بنر
+                                            طولي</span>
+                                    </div>
+                                    <div
+                                        class="wireframe-only flex flex-col gap-1 text-xs font-mono font-bold bg-slate-900/80 text-white p-2 rounded-lg border border-white/10 w-full">
+                                        <div class="flex justify-between">
+                                            <span class="text-slate-400">العرض:</span>
+                                            <span>263.2px</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-slate-400">الارتفاع:</span>
+                                            <span>516px</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="absolute inset-0 border-2 border-transparent group-hover:border-salla rounded-[24px] pointer-events-none transition-all duration-300">
+                                </div>
+                            </div>
+
+                            <!-- 2. MIDDLE COLUMN (أطفال / نسائي & رجالي): Width 542.4px (ColSpan 6) -->
+                            <!-- Contains children at top (542.4x250) and kids/men split on bottom with 16px gap -->
+                            <div class="col-span-6 flex flex-col gap-[16px] h-[516px]">
+
+                                <!-- Top Block: أطفال (أفقي) - 542.4px x 250px -->
+                                <div class="relative w-full h-[250px] overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+                                    onclick="focusOnEditor(2)">
+                                    <img id="desk-img-2"
+                                        src="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=600&q=80"
+                                        alt="أطفال"
+                                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        onerror="handleImageError(this, 'أطفال')">
+                                    <div id="desk-overlay-2"
+                                        class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                    </div>
+
+                                    <div class="absolute inset-0 p-5 flex flex-col justify-between items-start z-10">
+                                        <div class="w-full flex justify-between items-start">
+                                            <span id="desk-text-2"
+                                                class="text-white text-[18px] font-semibold bg-black/35 backdrop-blur-sm px-3.5 py-1 rounded-xl border border-white/10">أطفال</span>
+                                            <span
+                                                class="wireframe-only text-[10px] font-mono bg-amber-500 text-slate-950 px-2 py-0.5 rounded font-bold uppercase tracking-wider">بنر
+                                                أفقي</span>
+                                        </div>
+                                        <div
+                                            class="wireframe-only flex items-center justify-between text-xs font-mono font-bold bg-slate-900/80 text-white px-2.5 py-1.5 rounded-lg border border-white/10 w-full">
+                                            <span>أبعاد الكارت: 542.4px × 250px</span>
+                                            <span class="text-emerald-400">حاشية: 20px</span>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="absolute inset-0 border-2 border-transparent group-hover:border-salla rounded-[24px] pointer-events-none transition-all duration-300">
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic Vertical Gap Indicator for Middle Column -->
+                                <div
+                                    class="wireframe-only-flex h-[16px] bg-amber-500/10 border border-dashed border-amber-500/20 rounded-lg flex items-center justify-center text-[9px] font-mono font-bold text-amber-700 gap-1.5 guide-pulse select-none">
+                                    <i class="fa-solid fa-arrows-up-down text-[8px]"></i>
+                                    <span>فجوة عمودية: 16px</span>
+                                </div>
+
+                                <!-- Bottom Row: نسائي & رجالي (صغيرة متجاورة) - (263.2x250) + (263.2x250) -->
+                                <div class="w-full flex gap-[16px] relative">
+                                    <!-- Right Block: نسائي -->
+                                    <div class="relative w-[263.2px] h-[250px] overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+                                        onclick="focusOnEditor(3)">
+                                        <img id="desk-img-3"
+                                            src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80"
+                                            alt="نسائي"
+                                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            onerror="handleImageError(this, 'نسائي')">
+                                        <div id="desk-overlay-3"
+                                            class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                        </div>
+
+                                        <div
+                                            class="absolute inset-0 p-4 flex flex-col justify-between items-start z-10">
+                                            <div class="w-full flex justify-between items-start">
+                                                <span id="desk-text-3"
+                                                    class="text-white text-[16px] font-semibold bg-black/35 backdrop-blur-sm px-2.5 py-0.5 rounded-xl border border-white/10">نسائي</span>
+                                                <span
+                                                    class="wireframe-only text-[9px] font-mono bg-emerald-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">صغير</span>
+                                            </div>
+                                            <div
+                                                class="wireframe-only flex flex-col text-[10px] font-mono font-bold bg-slate-900/85 text-white p-1.5 rounded-md border border-white/10 w-full text-center">
+                                                <span>263.2px × 250px</span>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="absolute inset-0 border-2 border-transparent group-hover:border-salla rounded-[24px] pointer-events-none transition-all duration-300">
+                                        </div>
+                                    </div>
+
+                                    <!-- Absolute Middle Horizontal Gap overlay helper for Wireframe -->
+                                    <div
+                                        class="wireframe-only absolute left-[263.2px] right-[263.2px] top-0 bottom-0 bg-amber-500/15 border-x border-dashed border-amber-500/35 flex items-center justify-center text-[8px] font-mono font-bold text-amber-700 select-none guide-pulse z-20">
+                                        <div class="rotate-90 flex items-center gap-1">
+                                            <i class="fa-solid fa-arrows-up-down text-[8px]"></i>
+                                            <span>16px</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Left Block: رجالي -->
+                                    <div class="relative w-[263.2px] h-[250px] overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+                                        onclick="focusOnEditor(4)">
+                                        <img id="desk-img-4"
+                                            src="https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=400&q=80"
+                                            alt="رجالي"
+                                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            onerror="handleImageError(this, 'رجالي')">
+                                        <div id="desk-overlay-4"
+                                            class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                        </div>
+
+                                        <div
+                                            class="absolute inset-0 p-4 flex flex-col justify-between items-start z-10">
+                                            <div class="w-full flex justify-between items-start">
+                                                <span id="desk-text-4"
+                                                    class="text-white text-[16px] font-semibold bg-black/35 backdrop-blur-sm px-2.5 py-0.5 rounded-xl border border-white/10">رجالي</span>
+                                                <span
+                                                    class="wireframe-only text-[9px] font-mono bg-emerald-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">صغير</span>
+                                            </div>
+                                            <div
+                                                class="wireframe-only flex flex-col text-[10px] font-mono font-bold bg-slate-900/85 text-white p-1.5 rounded-md border border-white/10 w-full text-center">
+                                                <span>263.2px × 250px</span>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="absolute inset-0 border-2 border-transparent group-hover:border-salla rounded-[24px] pointer-events-none transition-all duration-300">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. RIGHT COLUMN (العطور - كبير جداً): Width 542.4px, Height 516px (ColSpan 3 - Wait, Colspan 3 out of 12 is 25%, we need 3/12 left, 6/12 middle, 3/12 right but wait: Left is 263.2, middle 542.4, right 542.4. So proportion is 25%, 50%, 50%? No, Left: 263.2 (2/10), Middle: 542.4 (4/10), Right: 542.4 (4/10). That corresponds precisely to Col-span 3, Col-span 6, Col-span 6 in a 15-column layout! In Tailwind we can do: col-span-3 (Left), col-span-6 (Middle), col-span-6 (Right) wait, that is 15 columns total. Or we can use exact flex columns to prevent any grid math rounding errors. Let's use custom CSS flex/grid layout to guarantee the pixel accuracy of: Column 1 (263.2px), Column 2 (542.4px), Column 3 (542.4px) with gap 16px! -->
+                            <!-- We will apply absolute flex widths to guarantee precision -->
+                            <div class="col-span-3 h-[516px] relative overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+                                onclick="focusOnEditor(1)">
+                                <img id="desk-img-1"
+                                    src="https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80"
+                                    alt="العطور"
+                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    onerror="handleImageError(this, 'العطور')">
+                                <div id="desk-overlay-1"
+                                    class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                </div>
+
+                                <div class="absolute inset-0 p-6 flex flex-col justify-between items-start z-10">
+                                    <div class="w-full flex justify-between items-start">
+                                        <span id="desk-text-1"
+                                            class="text-white text-[18px] font-semibold bg-black/35 backdrop-blur-sm px-3.5 py-1 rounded-xl border border-white/10">العطور</span>
+                                        <span
+                                            class="wireframe-only text-[10px] font-mono bg-amber-500 text-slate-950 px-2 py-0.5 rounded font-bold uppercase tracking-wider">كتلة
+                                            رئيسية</span>
+                                    </div>
+                                    <div
+                                        class="wireframe-only flex flex-col gap-1 text-xs font-mono font-bold bg-slate-900/80 text-white p-2 rounded-lg border border-white/10 w-full">
+                                        <div class="flex justify-between">
+                                            <span class="text-slate-400">العرض:</span>
+                                            <span>542.4px</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-slate-400">الارتفاع:</span>
+                                            <span>516px</span>
+                                        </div>
+                                        <div class="flex justify-between text-amber-400">
+                                            <span>الهامش:</span>
+                                            <span>24px (أعلى/يمين)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="absolute inset-0 border-2 border-transparent group-hover:border-salla rounded-[24px] pointer-events-none transition-all duration-300">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOBILE SIMULATOR DEVICE FRAME (Hidden by default, switched dynamically) -->
+            <div id="device-container-mobile"
+                class="hidden w-[432px] max-w-full bg-slate-200 p-4 border border-slate-300 rounded-[40px] shadow-2xl relative">
+
+                <!-- Mock Mobile Screen (398px Content viewport width) -->
+                <div class="w-[398px] bg-white rounded-[32px] shadow-inner relative overflow-hidden flex flex-col min-h-[750px] max-h-[780px]"
+                    id="mobile-viewport">
+
+                    <!-- Mobile Status Bar Mock -->
+                    <div
+                        class="bg-white px-6 py-2 flex justify-between items-center text-[11px] font-bold text-slate-700 border-b border-slate-50 select-none">
+                        <span>9:41</span>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-signal"></i>
+                            <i class="fa-solid fa-wifi"></i>
+                            <i class="fa-solid fa-battery-full text-sm"></i>
+                        </div>
+                    </div>
+
+                    <!-- App Header -->
+                    <div
+                        class="bg-white border-b border-slate-100 px-4 py-3.5 flex items-center justify-between sticky top-0 z-30 select-none">
+                        <div class="flex items-center gap-3 text-slate-600">
+                            <i class="fa-solid fa-bars text-lg cursor-pointer"></i>
+                            <i class="fa-solid fa-magnifying-glass text-lg cursor-pointer"></i>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="relative cursor-pointer hover:text-salla">
+                                <i class="fa-solid fa-shopping-basket text-lg text-slate-700"></i>
+                                <span
+                                    class="absolute -top-1.5 -right-1.5 bg-salla text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">٢</span>
+                            </div>
+                            <div class="flex items-center gap-1 border-r border-slate-200 pr-3">
+                                <span
+                                    class="w-6.5 h-6.5 bg-salla rounded-lg flex items-center justify-center text-white font-extrabold text-xs">ن</span>
+                                <span class="font-extrabold text-xs text-slate-800 font-tajawal">نخبة العطور</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Scrollable Core Layout -->
+                    <div class="flex-1 overflow-y-auto custom-scroll pb-24 relative" id="mobile-scroll-container">
+
+                        <!-- 16px Gap Stack -->
+                        <div class="flex flex-col gap-[16px] w-[398px] mx-auto p-0 relative">
+
+                            <!-- Mobile Block 1: العطور (398x300) -->
+                            <div class="relative w-[398px] h-[300px] overflow-hidden rounded-[16px] group cursor-pointer transition-all shadow-sm"
+                                onclick="focusOnEditor(1)">
+                                <img id="mob-img-1"
+                                    src="https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80"
+                                    class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                    onerror="handleImageError(this, 'العطور')">
+                                <div id="mob-overlay-1"
+                                    class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                </div>
+                                <div class="absolute inset-0 p-[20px] flex flex-col justify-between items-start z-10">
+                                    <span id="mob-text-1"
+                                        class="text-white text-[16px] font-semibold bg-black/35 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/10">العطور</span>
+                                    <div
+                                        class="wireframe-only text-[10px] font-mono bg-slate-900/80 text-white px-2 py-1 rounded-md">
+                                        398px × 300px | حاشية 20px</div>
+                                </div>
+                            </div>
+
+                            <!-- Spacer Guide -->
+                            <div
+                                class="wireframe-only-flex h-[16px] bg-amber-500/10 border-y border-dashed border-amber-500/25 flex items-center justify-center text-[10px] font-mono text-amber-700 gap-1 guide-pulse">
+                                <span>فجوة عمودية: 16px</span>
+                            </div>
+
+                            <!-- Mobile Block 2: أطفال (398x300) -->
+                            <div class="relative w-[398px] h-[300px] overflow-hidden rounded-[16px] group cursor-pointer transition-all shadow-sm"
+                                onclick="focusOnEditor(2)">
+                                <img id="mob-img-2"
+                                    src="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=600&q=80"
+                                    class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                    onerror="handleImageError(this, 'أطفال')">
+                                <div id="mob-overlay-2"
+                                    class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                </div>
+                                <div class="absolute inset-0 p-[20px] flex flex-col justify-between items-start z-10">
+                                    <span id="mob-text-2"
+                                        class="text-white text-[16px] font-semibold bg-black/35 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/10">أطفال</span>
+                                    <div
+                                        class="wireframe-only text-[10px] font-mono bg-slate-900/80 text-white px-2 py-1 rounded-md">
+                                        398px × 300px</div>
+                                </div>
+                            </div>
+
+                            <!-- Spacer Guide -->
+                            <div
+                                class="wireframe-only-flex h-[16px] bg-amber-500/10 border-y border-dashed border-amber-500/25 flex items-center justify-center text-[10px] font-mono text-amber-700 gap-1 guide-pulse">
+                                <span>فجوة عمودية: 16px</span>
+                            </div>
+
+                            <!-- Mobile Block 3 & 4: نسائي / رجالي متجاوران -->
+                            <div class="w-[398px] flex gap-[16px] relative">
+                                <div class="relative w-[191px] h-[250px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm"
+                                    onclick="focusOnEditor(3)">
+                                    <img id="mob-img-3"
+                                        src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80"
+                                        class="w-full h-full object-cover" onerror="handleImageError(this, 'نسائي')">
+                                    <div id="mob-overlay-3"
+                                        class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                    </div>
+                                    <div
+                                        class="absolute inset-0 p-[16px] flex flex-col justify-between items-start z-10">
+                                        <span id="mob-text-3"
+                                            class="text-white text-[15px] font-semibold bg-black/35 backdrop-blur-sm px-2 py-0.5 rounded-lg border border-white/10">نسائي</span>
+                                        <div
+                                            class="wireframe-only text-[8px] font-mono bg-slate-900/90 text-white px-1 py-0.5 rounded">
+                                            191x250</div>
+                                    </div>
+                                </div>
+
+                                <!-- Horizontal gap helper -->
+                                <div
+                                    class="wireframe-only absolute left-[191px] right-[191px] top-0 bottom-0 bg-amber-500/15 border-x border-dashed border-amber-500/30 flex items-center justify-center text-[8px] font-mono font-bold text-amber-700 select-none guide-pulse z-20">
+                                    <div class="rotate-90">16px</div>
+                                </div>
+
+                                <div class="relative w-[191px] h-[250px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm"
+                                    onclick="focusOnEditor(4)">
+                                    <img id="mob-img-4"
+                                        src="https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=400&q=80"
+                                        class="w-full h-full object-cover" onerror="handleImageError(this, 'رجالي')">
+                                    <div id="mob-overlay-4"
+                                        class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                    </div>
+                                    <div
+                                        class="absolute inset-0 p-[16px] flex flex-col justify-between items-start z-10">
+                                        <span id="mob-text-4"
+                                            class="text-white text-[15px] font-semibold bg-black/35 backdrop-blur-sm px-2 py-0.5 rounded-lg border border-white/10">رجالي</span>
+                                        <div
+                                            class="wireframe-only text-[8px] font-mono bg-slate-900/90 text-white px-1 py-0.5 rounded">
+                                            191x250</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Spacer Guide -->
+                            <div
+                                class="wireframe-only-flex h-[16px] bg-amber-500/10 border-y border-dashed border-amber-500/25 flex items-center justify-center text-[10px] font-mono text-amber-700 gap-1 guide-pulse">
+                                <span>فجوة عمودية: 16px</span>
+                            </div>
+
+                            <!-- Mobile Block 5: مكياج -->
+                            <div class="relative w-[398px] h-[300px] overflow-hidden rounded-[16px] group cursor-pointer transition-all shadow-sm"
+                                onclick="focusOnEditor(5)">
+                                <img id="mob-img-5"
+                                    src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80"
+                                    class="w-full h-full object-cover" onerror="handleImageError(this, 'مكياج')">
+                                <div id="mob-overlay-5"
+                                    class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-gray-900/5">
+                                </div>
+                                <div class="absolute inset-0 p-[20px] flex flex-col justify-between items-start z-10">
+                                    <span id="mob-text-5"
+                                        class="text-white text-[16px] font-semibold bg-black/35 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/10">مكياج</span>
+                                    <div
+                                        class="wireframe-only text-[10px] font-mono bg-slate-900/80 text-white px-2 py-1 rounded-md">
+                                        398px × 300px</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- FLOATING WIDGETS -->
+                    <div class="absolute bottom-6 left-6 z-40">
+                        <button onclick="scrollToTopMobile()"
+                            class="w-11 h-11 bg-white text-slate-700 rounded-full shadow-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center active:scale-90">
+                            <i class="fa-solid fa-arrow-up text-sm"></i>
+                        </button>
+                    </div>
+                    <div class="absolute bottom-6 right-6 z-40 flex flex-col gap-2.5">
+                        <a href="#" onclick="event.preventDefault(); showToast('اتصال مبرمج بالدعم الفني!')"
+                            class="w-11 h-11 bg-white text-slate-700 rounded-full shadow-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center active:scale-90">
+                            <i class="fa-solid fa-phone text-sm"></i>
+                        </a>
+                        <a href="#" onclick="event.preventDefault(); showToast('فتح محادثة واتساب للتجربة!')"
+                            class="w-11 h-11 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-600 transition-all flex items-center justify-center active:scale-90">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- LEFT SIDE: CONFIGURATOR, SPECS LEGEND & SALLA CODE GENERATOR -->
+        <section class="xl:col-span-5 flex flex-col gap-6">
+
+            <!-- Tab Controls -->
+            <div class="bg-white p-2 rounded-2xl border border-slate-200 flex flex-wrap gap-1.5 shadow-sm">
+                <button onclick="switchTab('tab-editor')" id="btn-tab-editor"
+                    class="flex-1 min-w-[120px] px-4 py-2.5 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 transition-all bg-salla text-white shadow-md">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>محرر البنرات والتخصيص</span>
+                </button>
+                <button onclick="switchTab('tab-legend')" id="btn-tab-legend"
+                    class="flex-1 min-w-[120px] px-4 py-2.5 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 transition-all text-slate-600 hover:bg-slate-50">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>مخطط الأبعاد (الأسطورة)</span>
+                </button>
+                <button onclick="switchTab('tab-code')" id="btn-tab-code"
+                    class="flex-1 min-w-[120px] px-4 py-2.5 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 transition-all text-slate-600 hover:bg-slate-50">
+                    <i class="fa-solid fa-code"></i>
+                    <span>تصدير كود متجر سلة</span>
+                </button>
+            </div>
+
+            <!-- Tab 1 Content: Banner Customization Form -->
+            <div id="tab-editor"
+                class="tab-content bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-5">
+                <div>
+                    <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-salla"></i>
+                        <span>تعديل محتوى شبكة Bento Grid</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">اضبط العناوين والروابط؛ لتحديث نسخة الهاتف والكمبيوتر فورياً
+                        في نفس الوقت.</p>
+                </div>
+
+                <!-- Live Editor Stack -->
+                <div class="space-y-4 max-h-[480px] overflow-y-auto pr-1 custom-scroll">
+
+                    <!-- Card 1: Perfume -->
+                    <div id="editor-card-1"
+                        class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold text-xs text-slate-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-salla"></span>
+                                <span>البنر الأول: العطور (كتلة رئيسية)</span>
+                            </span>
+                            <span
+                                class="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">542.4px
+                                × 516px</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">اسم القسم:</label>
+                                <input type="text" id="input-text-1" value="العطور" oninput="updateAllViews(1)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">رابط الصورة:</label>
+                                <input type="text" id="input-img-1"
+                                    value="https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80"
+                                    oninput="updateAllViews(1)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Kids -->
+                    <div id="editor-card-2"
+                        class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold text-xs text-slate-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-salla"></span>
+                                <span>البنر الثاني: أطفال (أفقي)</span>
+                            </span>
+                            <span
+                                class="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">542.4px
+                                × 250px</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">اسم القسم:</label>
+                                <input type="text" id="input-text-2" value="أطفال" oninput="updateAllViews(2)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">رابط الصورة:</label>
+                                <input type="text" id="input-img-2"
+                                    value="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=600&q=80"
+                                    oninput="updateAllViews(2)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Women -->
+                    <div id="editor-card-3"
+                        class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold text-xs text-slate-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <span>البنر الثالث: نسائي (صغير)</span>
+                            </span>
+                            <span
+                                class="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">263.2px
+                                × 250px</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">اسم القسم:</label>
+                                <input type="text" id="input-text-3" value="نسائي" oninput="updateAllViews(3)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">رابط الصورة:</label>
+                                <input type="text" id="input-img-3"
+                                    value="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80"
+                                    oninput="updateAllViews(3)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Men -->
+                    <div id="editor-card-4"
+                        class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold text-xs text-slate-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <span>البنر الرابع: رجالي (صغير)</span>
+                            </span>
+                            <span
+                                class="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">263.2px
+                                × 250px</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">اسم القسم:</label>
+                                <input type="text" id="input-text-4" value="رجالي" oninput="updateAllViews(4)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">رابط الصورة:</label>
+                                <input type="text" id="input-img-4"
+                                    value="https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=400&q=80"
+                                    oninput="updateAllViews(4)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Makeup -->
+                    <div id="editor-card-5"
+                        class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold text-xs text-slate-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                                <span>البنر الخامس: مكياج (طولي)</span>
+                            </span>
+                            <span
+                                class="text-[9px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">263.2px
+                                × 516px</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">اسم القسم:</label>
+                                <input type="text" id="input-text-5" value="مكياج" oninput="updateAllViews(5)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">رابط الصورة:</label>
+                                <input type="text" id="input-img-5"
+                                    value="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80"
+                                    oninput="updateAllViews(5)"
+                                    class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-salla/30 bg-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Identity customization -->
+                <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="primary-color" value="#00A382"
+                            onchange="updateBrandThemeColor(this.value)"
+                            class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200">
+                        <div>
+                            <span class="block text-[10px] text-slate-400">لون هوية المتجر:</span>
+                            <span id="primary-hex" class="text-xs font-mono font-bold text-slate-700">#00A382</span>
+                        </div>
+                    </div>
+
+                    <button onclick="resetToSystemDefaults()"
+                        class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                        <span>استعادة الافتراضيات</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 2 Content: Specs Legend (الأسطورة) -->
+            <div id="tab-legend"
+                class="tab-content hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-5">
+                <div>
+                    <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-salla"></i>
+                        <span>مخطط مواصفات الأسطورة (Bento Grid Specs)</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">المعايير الهندسية والألوان المتبعة في رسم هذا الهيكل لسطح
+                        المكتب والهواتف.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Standard Dimensions -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
+                        <h3 class="font-bold text-xs text-slate-800 border-b pb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-ruler"></i>
+                            <span>قياسات الديسك توب</span>
+                        </h3>
+                        <ul class="text-[11px] text-slate-600 space-y-1">
+                            <li>• العطور: <b class="font-mono">542.4px × 516px</b></li>
+                            <li>• مكياج: <b class="font-mono">263.2px × 516px</b></li>
+                            <li>• أطفال: <b class="font-mono">542.4px × 250px</b></li>
+                            <li>• نسائي/رجالي: <b class="font-mono">263.2px × 250px</b></li>
+                        </ul>
+                    </div>
+
+                    <!-- General specifications -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
+                        <h3 class="font-bold text-xs text-slate-800 border-b pb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>معايير سلة المعتمدة</span>
+                        </h3>
+                        <ul class="text-[11px] text-slate-600 space-y-1">
+                            <li>• الفجوات والمسافات (Gap): <b class="font-mono">16px</b></li>
+                            <li>• دوران حواف البنرات: <b class="font-mono">16px-24px</b></li>
+                            <li>• تمدد الصور: <b class="font-mono">Object-Fit: Cover</b></li>
+                            <li>• تدرج التباين: <b class="font-mono">bg-gradient-to-b</b></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-amber-50/50 border border-amber-200/50 rounded-xl">
+                    <span class="block text-xs font-bold text-amber-800 mb-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i> ملاحظة للتناظر غير المتكافئ:
+                    </span>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                        يتم حساب عرض كروت الديسك توب لتقسيم المساحة المتاحة بالتوافق مع شاشات الكمبيوتر الأوسع بمرونة
+                        متناهية، مع الحفاظ على أن يعطي الوزن البصري ثقله للجانب الأيمن (بنر العطور) والجانب الأوسط
+                        (بنرات الأطفال، نسائي، رجالي) بعرض <b class="font-mono">542.4px</b> للواحد، والجانب الأيسر بعرض
+                        أقل لكسر الرتابة البصرية التقليدية.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab 3 Content: Salla Unified Code Export -->
+            <div id="tab-code"
+                class="tab-content hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-code text-salla"></i>
+                            <span>كود متجر سلة المتجاوب (Tailwind)</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">كود نظيف وموحد يدمج العرضين تلقائياً (Desktop + Mobile)
+                            بناءً على أبعاد الشاشة.</p>
+                    </div>
+
+                    <button onclick="copyGeneratedCode()"
+                        class="bg-salla hover:bg-salla-dark text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>نسخ الكود</span>
+                    </button>
+                </div>
+
+                <!-- Code Terminal Box -->
+                <div class="relative">
+                    <pre class="bg-slate-900 text-slate-200 p-4 rounded-xl text-[11px] font-mono overflow-x-auto max-h-[300px] dir-ltr text-left"
+                        id="code-output-box">
+<!-- جاري إنشاء وتجميع الكود المتكامل... -->
+                    </pre>
+                </div>
+
+                <div
+                    class="p-3 bg-sky-50 border border-sky-100 rounded-xl text-[11px] text-sky-800 flex items-start gap-2">
+                    <i class="fa-solid fa-info-circle text-sky-500 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold block">دليل الاستخدام الفوري:</span>
+                        <p class="mt-0.5 leading-relaxed">انسخ الكود بالكامل، ثم ألصقه في صفحة مخصصة بمتجرك على منصة سلة
+                            (Salla Code Editor). الكود يدعم التجاوب الذكي والتكيف التلقائي بدون أي تعديل خارجي.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Global Floating Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-6 left-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-slate-950 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-message">تم نسخ كود التخصيص بنجاح!</span>
+    </div>
+
+    <!-- Application Engine Logic Scripts -->
+    <script>
+        // Store Application State
+        let selectedDevice = 'desktop'; // 'desktop' or 'mobile'
+        let selectedMode = 'wireframe'; // 'wireframe' or 'live'
+        let isGuidesOn = true;
+        let globalPrimaryColor = '#00A382';
+
+        // Customizer Data Repository
+        const bannersData = {
+            1: { title: "العطور", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80" },
+            2: { title: "أطفال", img: "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=600&q=80" },
+            3: { title: "نسائي", img: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80" },
+            4: { title: "رجالي", img: "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=400&q=80" },
+            5: { title: "مكياج", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" }
+        };
+
+        // Window load sequence
+        window.onload = function () {
+            setDeviceView('desktop');
+            setVisualMode('wireframe');
+            generateUnifiedCode();
+        }
+
+        // Toggles simulated device frames
+        function setDeviceView(device) {
+            selectedDevice = device;
+
+            const btnDesktop = document.getElementById('btn-device-desktop');
+            const btnMobile = document.getElementById('btn-device-mobile');
+            const frameDesktop = document.getElementById('device-container-desktop');
+            const frameMobile = document.getElementById('device-container-mobile');
+            const statusLabel = document.getElementById('device-status-lbl');
+
+            if (device === 'desktop') {
+                btnDesktop.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 bg-white text-salla shadow-sm";
+                btnMobile.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 text-slate-600 hover:text-slate-900";
+
+                frameDesktop.classList.remove('hidden');
+                frameMobile.classList.add('hidden');
+                statusLabel.innerText = "جاري عرض: كمبيوتر مكتبي (عرض شبكي Bento Grid)";
+            } else {
+                btnMobile.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 bg-white text-salla shadow-sm";
+                btnDesktop.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 text-slate-600 hover:text-slate-900";
+
+                frameMobile.classList.remove('hidden');
+                frameDesktop.classList.add('hidden');
+                statusLabel.innerText = "جاري عرض: هاتف ذكي (ترتيب طولي متناسق)";
+            }
+
+            // Sync with current wireframe styling
+            applyVisualFilters();
+        }
+
+        // Toggles Visual Presentation Mode (Wireframe vs Live)
+        function setVisualMode(mode) {
+            selectedMode = mode;
+
+            const btnWireframe = document.getElementById('btn-mode-wireframe');
+            const btnLive = document.getElementById('btn-mode-live');
+
+            if (mode === 'wireframe') {
+                btnWireframe.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 bg-white text-salla shadow-sm";
+                btnLive.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 text-slate-600 hover:text-slate-900";
+            } else {
+                btnLive.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 bg-white text-salla shadow-sm";
+                btnWireframe.className = "px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all duration-300 text-slate-600 hover:text-slate-900";
+            }
+
+            applyVisualFilters();
+        }
+
+        // Handles filters and styling states depending on current mode
+        function applyVisualFilters() {
+            const wireframeElements = document.querySelectorAll('.wireframe-only');
+            const wireframeFlexGuides = document.querySelectorAll('.wireframe-only-flex');
+
+            if (selectedMode === 'wireframe') {
+                // Show blue lines & guides if guides are enabled
+                const displayStyle = isGuidesOn ? 'flex' : 'none';
+                wireframeElements.forEach(el => el.style.display = displayStyle);
+                wireframeFlexGuides.forEach(el => el.style.display = displayStyle);
+
+                // Grayscale out background graphics
+                for (let i = 1; i <= 5; i++) {
+                    const deskImg = document.getElementById(`desk-img-${i}`);
+                    const mobImg = document.getElementById(`mob-img-${i}`);
+                    if (deskImg) deskImg.style.filter = "grayscale(100%) opacity(30%)";
+                    if (mobImg) mobImg.style.filter = "grayscale(100%) opacity(30%)";
+
+                    const deskOverlay = document.getElementById(`desk-overlay-${i}`);
+                    const mobOverlay = document.getElementById(`mob-overlay-${i}`);
+                    if (deskOverlay) deskOverlay.style.backgroundColor = 'rgba(15, 23, 42, 0.5)';
+                    if (mobOverlay) mobOverlay.style.backgroundColor = 'rgba(15, 23, 42, 0.5)';
+                }
+            } else {
+                // Clear all lines & guides instantly
+                wireframeElements.forEach(el => el.style.display = 'none');
+                wireframeFlexGuides.forEach(el => el.style.display = 'none');
+
+                // Reset to color graphics
+                for (let i = 1; i <= 5; i++) {
+                    const deskImg = document.getElementById(`desk-img-${i}`);
+                    const mobImg = document.getElementById(`mob-img-${i}`);
+                    if (deskImg) deskImg.style.filter = "none";
+                    if (mobImg) mobImg.style.filter = "none";
+
+                    const deskOverlay = document.getElementById(`desk-overlay-${i}`);
+                    const mobOverlay = document.getElementById(`mob-overlay-${i}`);
+                    if (deskOverlay) deskOverlay.style.backgroundColor = 'transparent';
+                    if (mobOverlay) mobOverlay.style.backgroundColor = 'transparent';
+                }
+            }
+        }
+
+        // Toggle ruler guides manually
+        function toggleGuides() {
+            isGuidesOn = !isGuidesOn;
+
+            const btn = document.getElementById('btn-guides');
+            const icon = document.getElementById('guides-icon');
+            const text = document.getElementById('guides-text');
+
+            if (isGuidesOn) {
+                btn.className = "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all";
+                text.innerText = "إخفاء الأبعاد الإرشادية";
+                icon.className = "fa-solid fa-ruler-combined";
+            } else {
+                btn.className = "bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all";
+                text.innerText = "إظهار الأبعاد الإرشادية";
+                icon.className = "fa-solid fa-square-minus";
+            }
+
+            applyVisualFilters();
+        }
+
+        // Synchronize and update all image and text changes across both viewports instantly
+        function updateAllViews(id) {
+            const titleVal = document.getElementById(`input-text-${id}`).value;
+            const imgVal = document.getElementById(`input-img-${id}`).value;
+
+            bannersData[id].title = titleVal;
+            bannersData[id].img = imgVal;
+
+            // Update Desktop Elements
+            document.getElementById(`desk-text-${id}`).innerText = titleVal;
+            document.getElementById(`desk-img-${id}`).src = imgVal;
+
+            // Update Mobile Elements
+            document.getElementById(`mob-text-${id}`).innerText = titleVal;
+            document.getElementById(`mob-img-${id}`).src = imgVal;
+
+            // Re-generate code output box
+            generateUnifiedCode();
+        }
+
+        // Brings focus onto inputs when clicking simulated cards directly
+        function focusOnEditor(id) {
+            switchTab('tab-editor');
+
+            const card = document.getElementById(`editor-card-${id}`);
+            const input = document.getElementById(`input-text-${id}`);
+            if (input) {
+                input.focus();
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Visual highlight pop
+                card.classList.add('ring-2', 'ring-amber-400', 'border-amber-400');
+                setTimeout(() => {
+                    card.classList.remove('ring-2', 'ring-amber-400', 'border-amber-400');
+                }, 1500);
+
+                showToast(`تم تحديد كارت (${bannersData[id].title}) للتعديل الفوري.`);
+            }
+        }
+
+        // Beautiful SVG fallback for broken links
+        function handleImageError(img, name) {
+            img.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="100%" height="100%" fill="%23f1f5f9"/><text x="50%" y="50%" font-family="Cairo, sans-serif" font-weight="bold" font-size="18" fill="%2394a3b8" dominant-baseline="middle" text-anchor="middle">${name}</text></svg>`;
+        }
+
+        // Theme Customizer
+        function updateBrandThemeColor(hex) {
+            globalPrimaryColor = hex;
+            document.getElementById('primary-hex').innerText = hex.toUpperCase();
+
+            // Update Salla badges color dynamically
+            const sallaBadges = document.querySelectorAll('.bg-salla');
+            sallaBadges.forEach(el => {
+                el.style.backgroundColor = hex;
+            });
+
+            showToast(`تم تعديل لون هوية المتجر بنجاح إلى: ${hex}`);
+            generateUnifiedCode();
+        }
+
+        // Reset to system defaults
+        function resetToSystemDefaults() {
+            const defaults = {
+                1: { title: "العطور", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80" },
+                2: { title: "أطفال", img: "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=600&q=80" },
+                3: { title: "نسائي", img: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80" },
+                4: { title: "رجالي", img: "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=400&q=80" },
+                5: { title: "مكياج", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" }
+            };
+
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`input-text-${i}`).value = defaults[i].title;
+                document.getElementById(`input-img-${i}`).value = defaults[i].img;
+                updateAllViews(i);
+            }
+
+            document.getElementById('primary-color').value = '#00A382';
+            updateBrandThemeColor('#00A382');
+            showToast("تمت استعادة البيانات والقياسات الافتراضية بنجاح.");
+        }
+
+        // Switch Tab Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            const tabs = ['tab-editor', 'tab-legend', 'tab-code'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (t === tabId) {
+                    btn.className = "flex-1 min-w-[120px] px-4 py-2.5 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 transition-all bg-salla text-white shadow-md";
+                    btn.style.backgroundColor = globalPrimaryColor;
+                } else {
+                    btn.className = "flex-1 min-w-[120px] px-4 py-2.5 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 transition-all text-slate-600 hover:bg-slate-50";
+                    btn.style.backgroundColor = 'transparent';
+                }
+            });
+        }
+
+        function scrollToTopMobile() {
+            document.getElementById('mobile-scroll-container').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Unified Salla Responsive Code Builder
+        function generateUnifiedCode() {
+            const outputBox = document.getElementById('code-output-box');
+
+            const codeText = `<!-- 
+  ملاحظة هامة: هذا الكود مخصص لمتجر سلة الاحترافي ومكتوب بالكامل بـ Tailwind CSS المتكامل.
+  الكود هجين ومتجاوب ذكياً (Hybrid Responsive Design):
+  - يعرض Bento Grid بتوزيع غير متناظر فائق الفخامة على أجهزة الديسك توب (شاشات الكمبيوتر والألواح الكبيرة).
+  - يتحول تلقائياً إلى الترتيب العمودي المتناسق (Vertical Stack) بعرض 398px على الهواتف الذكية.
+-->
+
+<div class="relative w-full max-w-[1100px] mx-auto p-4 md:p-0 font-cairo">
+    
+    <!-- ========================================== -->
+    <!-- ١. مظهر الديسك توب (Bento Grid): يظهر على الشاشات الكبيرة فقط -->
+    <!-- ========================================== -->
+    <div class="hidden lg:grid grid-cols-12 gap-[16px] items-start w-full">
+        
+        <!-- البنر الأيسر: مكياج (طولي) -->
+        <div class="col-span-3 h-[516px] relative overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300">
+            <img src="${bannersData[5].img}" alt="${bannersData[5].title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            <!-- تأثير التدرج لحماية النص ووضوحه (Gradient Overlay) -->
+            <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+            <!-- المحتوى والنصوص -->
+            <div class="absolute inset-0 p-6 flex flex-col justify-start items-start">
+                <span class="text-white text-[18px] font-semibold bg-black/30 backdrop-blur-sm px-3.5 py-1 rounded-xl border border-white/10">${bannersData[5].title}</span>
+            </div>
+        </div>
+
+        <!-- العمود الأوسط: أطفال وبنرات نسائي/رجالي متجاورة -->
+        <div class="col-span-6 flex flex-col gap-[16px] h-[516px]">
+            <!-- بنر أطفال (أفقي) -->
+            <div class="relative w-full h-[250px] overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300">
+                <img src="${bannersData[2].img}" alt="${bannersData[2].title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+                <div class="absolute inset-0 p-5 flex flex-col justify-start items-start">
+                    <span class="text-white text-[18px] font-semibold bg-black/30 backdrop-blur-sm px-3.5 py-1 rounded-xl border border-white/10">${bannersData[2].title}</span>
+                </div>
+            </div>
+
+            <!-- صف بنرات متجاورة (نسائي / رجالي) -->
+            <div class="w-full flex gap-[16px]">
+                <!-- نسائي -->
+                <div class="relative w-1/2 h-[250px] overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300">
+                    <img src="${bannersData[3].img}" alt="${bannersData[3].title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+                    <div class="absolute inset-0 p-4 flex flex-col justify-start items-start">
+                        <span class="text-white text-[16px] font-semibold bg-black/30 backdrop-blur-sm px-2.5 py-0.5 rounded-xl border border-white/10">${bannersData[3].title}</span>
+                    </div>
+                </div>
+
+                <!-- رجالي -->
+                <div class="relative w-1/2 h-[250px] overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300">
+                    <img src="${bannersData[4].img}" alt="${bannersData[4].title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+                    <div class="absolute inset-0 p-4 flex flex-col justify-start items-start">
+                        <span class="text-white text-[16px] font-semibold bg-black/30 backdrop-blur-sm px-2.5 py-0.5 rounded-xl border border-white/10">${bannersData[4].title}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- البنر الأيمن: العطور (كبير جداً - كتلة رئيسية) -->
+        <div class="col-span-3 h-[516px] relative overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-md transition-all duration-300">
+            <img src="${bannersData[1].img}" alt="${bannersData[1].title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+            <div class="absolute inset-0 p-6 flex flex-col justify-start items-start">
+                <span class="text-white text-[18px] font-semibold bg-black/30 backdrop-blur-sm px-3.5 py-1 rounded-xl border border-white/10">${bannersData[1].title}</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ٢. مظهر الهاتف (Vertical Stack): يظهر على الهواتف الذكية فقط -->
+    <!-- ========================================== -->
+    <div class="flex lg:hidden flex-col gap-[16px] w-full max-w-[398px] mx-auto">
+        
+        <!-- بنر العطور -->
+        <div class="relative w-full h-[300px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm transition-all duration-300">
+            <img src="${bannersData[1].img}" alt="${bannersData[1].title}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+            <div class="absolute inset-0 p-[20px] flex flex-col justify-start items-start">
+                <span class="text-white text-[16px] font-semibold bg-black/30 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/10">${bannersData[1].title}</span>
+            </div>
+        </div>
+
+        <!-- بنر أطفال -->
+        <div class="relative w-full h-[300px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm transition-all duration-300">
+            <img src="${bannersData[2].img}" alt="${bannersData[2].title}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+            <div class="absolute inset-0 p-[20px] flex flex-col justify-start items-start">
+                <span class="text-white text-[16px] font-semibold bg-black/30 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/10">${bannersData[2].title}</span>
+            </div>
+        </div>
+
+        <!-- البنرات الصغيرة المتجاورة -->
+        <div class="w-full flex gap-[16px]">
+            <!-- نسائي -->
+            <div class="relative w-1/2 h-[250px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm transition-all duration-300">
+                <img src="${bannersData[3].img}" alt="${bannersData[3].title}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+                <div class="absolute inset-0 p-4 flex flex-col justify-start items-start">
+                    <span class="text-white text-[15px] font-semibold bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-lg border border-white/10">${bannersData[3].title}</span>
+                </div>
+            </div>
+
+            <!-- رجالي -->
+            <div class="relative w-1/2 h-[250px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm transition-all duration-300">
+                <img src="${bannersData[4].img}" alt="${bannersData[4].title}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+                <div class="absolute inset-0 p-4 flex flex-col justify-start items-start">
+                    <span class="text-white text-[15px] font-semibold bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-lg border border-white/10">${bannersData[4].title}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- بنر مكياج -->
+        <div class="relative w-full h-[300px] overflow-hidden rounded-[16px] group cursor-pointer shadow-sm transition-all duration-300">
+            <img src="${bannersData[5].img}" alt="${bannersData[5].title}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/15 to-transparent"></div>
+            <div class="absolute inset-0 p-[20px] flex flex-col justify-start items-start">
+                <span class="text-white text-[16px] font-semibold bg-black/30 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/10">${bannersData[5].title}</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>`;
+
+            outputBox.textContent = codeText;
+        }
+
+        // Clip text generator
+        function copyGeneratedCode() {
+            const textToCopy = document.getElementById('code-output-box').textContent;
+
+            const shadowTextarea = document.createElement('textarea');
+            shadowTextarea.value = textToCopy;
+            document.body.appendChild(shadowTextarea);
+            shadowTextarea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast("تم نسخ الكود الموحد بنجاح! جاهز للصق بمتجرك.");
+            } catch (err) {
+                showToast("حدث خطأ أثناء محاولة نسخ الكود.");
+            }
+            document.body.removeChild(shadowTextarea);
+        }
+
+        // Show Toast Function
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+
+            toastMsg.innerText = msg;
+            toast.className = "fixed bottom-6 left-6 z-50 transform translate-y-0 opacity-100 transition-all duration-300 bg-slate-950 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold";
+
+            setTimeout(() => {
+                toast.className = "fixed bottom-6 left-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-slate-950 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold";
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
